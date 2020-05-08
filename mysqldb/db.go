@@ -27,7 +27,7 @@ import (
 
 const (
 	userTest   = "select count(*) from user "
-	userSearch = "SELECT u.id, u.user, u.domain, u.key, ut.user_type " +
+	userSearch = "SELECT u.id, u.user, u.key, u.domain, ut.user_type " +
 		"FROM user u " +
 		"inner join user_type ut " +
 		"on u.user_type_id = ut.id " +
@@ -71,6 +71,7 @@ func (d *UserDB) GetUser(key string) *User {
 	row := d.DB.Get(userSearch, a...)
 	if row != nil && len(row.Row) != 0 {
 		foundRow := row.Row
+		d.Log.Debug("foundRow", foundRow)
 		rtn = parseClientRow(&foundRow)
 	}
 

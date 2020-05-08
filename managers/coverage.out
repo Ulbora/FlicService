@@ -1,0 +1,17 @@
+mode: set
+github.com/Ulbora/FlicService/managers/flicManager.go:69.40,71.2 1 1
+github.com/Ulbora/FlicService/managers/flicManager.go:74.67,76.25 2 1
+github.com/Ulbora/FlicService/managers/flicManager.go:100.2,100.13 1 1
+github.com/Ulbora/FlicService/managers/flicManager.go:76.25,91.27 10 1
+github.com/Ulbora/FlicService/managers/flicManager.go:91.27,98.4 6 1
+github.com/Ulbora/FlicService/managers/flicManager.go:104.61,106.25 2 1
+github.com/Ulbora/FlicService/managers/flicManager.go:134.2,134.13 1 1
+github.com/Ulbora/FlicService/managers/flicManager.go:106.25,121.27 10 1
+github.com/Ulbora/FlicService/managers/flicManager.go:121.27,132.4 10 1
+github.com/Ulbora/FlicService/managers/flicManager.go:137.59,139.22 2 1
+github.com/Ulbora/FlicService/managers/flicManager.go:154.2,155.12 2 1
+github.com/Ulbora/FlicService/managers/flicManager.go:139.22,141.42 2 1
+github.com/Ulbora/FlicService/managers/flicManager.go:141.42,143.4 1 1
+github.com/Ulbora/FlicService/managers/flicManager.go:144.8,144.34 1 1
+github.com/Ulbora/FlicService/managers/flicManager.go:144.34,150.75 6 1
+github.com/Ulbora/FlicService/managers/flicManager.go:150.75,152.4 1 1
