@@ -30,6 +30,8 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
+github.com/Ulbora/AnalyticPusher v1.0.0 h1:wfoxONbhJO81RBn0zlL6feDpqWQ4CURcwtQa3qgvlog=
+github.com/Ulbora/AnalyticPusher v1.0.0/go.mod h1:hHIf4cRX1rBZwe8CDQ2hlMzbXLD4yxFv/ItdV2MEIkk=
 github.com/Ulbora/BigQueryPuller v1.0.0 h1:7CB9d6vy5Wpb5VkRF/wXsqCSymgzqKw59nHwPifq2eE=
 github.com/Ulbora/BigQueryPuller v1.0.0/go.mod h1:tSD8Ui7NVBroxEUwS7ILcOfbG7Yc6ycyId22KkE5Jhc=
 github.com/Ulbora/Level_Logger v1.0.2 h1:uhuNi1oSQ1zSDhuYQS7NEHqtR4lAYPGyW2XGwJZtxmk=

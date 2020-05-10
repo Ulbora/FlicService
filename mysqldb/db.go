@@ -27,11 +27,16 @@ import (
 
 const (
 	userTest   = "select count(*) from user "
-	userSearch = "SELECT u.id, u.user, u.key, u.domain, ut.user_type " +
+	userSearch = "SELECT u.id, u.user, u.key, u.domain, ut.user_type, u.enabled " +
 		"FROM user u " +
 		"inner join user_type ut " +
 		"on u.user_type_id = ut.id " +
 		"WHERE u.key = ? "
+
+	bqTableSearch = "SELECT id, bq_table_name " +
+		"FROM bq_table "
+
+	bqTableUpdate = "UPDATE bq_table SET bq_table_name = ? WHERE id = ? "
 )
 
 //User User
@@ -41,11 +46,20 @@ type User struct {
 	Domain   string
 	Key      string
 	UserType string
+	Enabled  bool
+}
+
+//FlicTable FlicTable
+type FlicTable struct {
+	ID   int64
+	Name string
 }
 
 //FlicDB FlicDB
 type FlicDB interface {
 	GetUser(key string) *User
+	GetFlicTable() *FlicTable
+	SetFlicTable(fc *FlicTable) bool
 }
 
 //UserDB UserDB
@@ -57,6 +71,45 @@ type UserDB struct {
 //GetNew GetNew
 func (d *UserDB) GetNew() FlicDB {
 	return d
+}
+
+//GetFlicTable GetFlicTable
+func (d *UserDB) GetFlicTable() *FlicTable {
+	d.Log.Debug("in get bq table")
+	var rtn FlicTable
+	if !d.testConnection() {
+		d.DB.Connect()
+	}
+	var a []interface{}
+	rows := d.DB.GetList(bqTableSearch, a...)
+	d.Log.Debug("rows:  ", *rows)
+	if rows != nil && len(rows.Rows) != 0 {
+		foundRows := rows.Rows
+		for r := range foundRows {
+			foundRow := foundRows[r]
+			if len(foundRow) > 0 {
+				int64Val, err := strconv.ParseInt((foundRow)[0], 10, 64)
+				if err == nil {
+					rtn.ID = int64Val
+					rtn.Name = (foundRow)[1]
+				}
+			}
+			break
+		}
+	}
+	return &rtn
+}
+
+//SetFlicTable SetFlicTable
+func (d *UserDB) SetFlicTable(fc *FlicTable) bool {
+	d.Log.Debug("in Set bq table")
+	if !d.testConnection() {
+		d.DB.Connect()
+	}
+	var a []interface{}
+	a = append(a, fc.Name, fc.ID)
+	rtn := d.DB.Update(bqTableUpdate, a...)
+	return rtn
 }
 
 //GetUser GetUser
@@ -104,12 +157,14 @@ func parseClientRow(foundRow *[]string) *User {
 	var rtn User
 	if len(*foundRow) > 0 {
 		int64Val, err := strconv.ParseInt((*foundRow)[0], 10, 64)
-		if err == nil {
+		enabled, eerr := strconv.ParseBool((*foundRow)[5])
+		if err == nil && eerr == nil {
 			rtn.ID = int64Val
 			rtn.User = (*foundRow)[1]
 			rtn.Key = (*foundRow)[2]
 			rtn.Domain = (*foundRow)[3]
 			rtn.UserType = (*foundRow)[4]
+			rtn.Enabled = enabled
 		}
 	}
 	return &rtn

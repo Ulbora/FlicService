@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/bigquery"
+	ph "github.com/Ulbora/AnalyticPusher"
 	pu "github.com/Ulbora/BigQueryPuller"
 
 	fdb "github.com/Ulbora/FlicService/mysqldb"
@@ -17,7 +18,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func TestFlicManager_FindFlicListByZip(t *testing.T) {
+func TestFlicManageri_FindFlicListByZip(t *testing.T) {
 	var fm FlicManager
 	var db db.Database
 	var udb fdb.UserDB
@@ -50,6 +51,13 @@ func TestFlicManager_FindFlicListByZip(t *testing.T) {
 	}
 	bp.SetClient(client)
 	fm.Puller = &bp
+
+	var ayn ph.Pusher
+	ayn.GcpProject = "august-gantry-192521"
+	ayn.Client = client
+	ayn.Ctx = ctx
+	ayn.DatasetName = "ulboralabs"
+	fm.AnalyticPusher = &ayn
 
 	var req FlicRequest
 	req.APIKey = "61616dfggdf5g64gf4"
@@ -66,7 +74,7 @@ func TestFlicManager_FindFlicListByZip(t *testing.T) {
 
 }
 
-func TestFlicManager_FindFlicByKey(t *testing.T) {
+func TestFlicManageri_FindFlicByKey(t *testing.T) {
 	var fm FlicManager
 	var db db.Database
 	var udb fdb.UserDB
@@ -99,6 +107,13 @@ func TestFlicManager_FindFlicByKey(t *testing.T) {
 	}
 	bp.SetClient(client)
 	fm.Puller = &bp
+
+	var ayn ph.Pusher
+	ayn.GcpProject = "august-gantry-192521"
+	ayn.Client = client
+	ayn.Ctx = ctx
+	ayn.DatasetName = "ulboralabs"
+	fm.AnalyticPusher = &ayn
 
 	var req FlicRequest
 	req.APIKey = "61616dfggdf5g64gf4"

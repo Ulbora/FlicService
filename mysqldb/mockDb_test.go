@@ -19,3 +19,35 @@ func TestMockDB_GetUser(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestMockDB_GetBqTable(t *testing.T) {
+	// var dbii db.Database
+	var udbii MockUserDB
+	var bqt FlicTable
+	bqt.ID = 5
+	bqt.Name = "test_table"
+	udbii.MockFlicTable = bqt
+
+	udbi := udbii.GetNew()
+	fu := udbi.GetFlicTable()
+	fmt.Println("fu", fu)
+	if fu.ID == 0 {
+		t.Fail()
+	}
+}
+
+func TestMockDB_SetBqTable(t *testing.T) {
+	// var dbii db.Database
+	var udbii MockUserDB
+	udbii.MockSetSuccess = true
+	var bqt FlicTable
+	bqt.ID = 5
+	bqt.Name = "test_table"
+
+	udbi := udbii.GetNew()
+	suc := udbi.SetFlicTable(&bqt)
+	fmt.Println("suc", suc)
+	if !suc {
+		t.Fail()
+	}
+}

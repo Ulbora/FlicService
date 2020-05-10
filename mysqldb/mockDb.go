@@ -19,12 +19,24 @@ package mysqldb
 
 //MockUserDB MockUserDB
 type MockUserDB struct {
-	MockUser User
+	MockUser       User
+	MockFlicTable  FlicTable
+	MockSetSuccess bool
 }
 
 //GetUser GetUser
 func (d *MockUserDB) GetUser(key string) *User {
 	return &d.MockUser
+}
+
+//GetFlicTable GetFlicTable
+func (d *MockUserDB) GetFlicTable() *FlicTable {
+	return &d.MockFlicTable
+}
+
+//SetFlicTable SetFlicTable
+func (d *MockUserDB) SetFlicTable(fc *FlicTable) bool {
+	return d.MockSetSuccess
 }
 
 //GetNew GetNew

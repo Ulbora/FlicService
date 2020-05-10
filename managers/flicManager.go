@@ -18,25 +18,34 @@ package manager
 */
 
 import (
+	"sync"
 	"time"
 
 	"cloud.google.com/go/bigquery"
+	ph "github.com/Ulbora/AnalyticPusher"
 	pu "github.com/Ulbora/BigQueryPuller"
 	db "github.com/Ulbora/FlicService/mysqldb"
 	lg "github.com/Ulbora/Level_Logger"
 )
 
+const (
+	searchTypeZip = "zip"
+	searchTypeID  = "id"
+
+	analyticsTable = "flic_analytics"
+)
+
 //Flic Flic
 type Flic struct {
-	Key            string    // `bigquery:"key"`
-	Lic            string    //`bigquery:"lic"`
-	ExpDate        time.Time //`bigquery:"exp_date"`
-	LicName        string    //`bigquery:"lic_name"`
-	BusName        string    //`bigquery:"bus_name"`
-	PremiseAddress string    //`bigquery:"premise_address"`
-	PremiseZip     string    //`bigquery:"premise_zip"`
-	MailingAddress string    // `bigquery:"mailing_address"`
-	Phone          string    //`bigquery:"phone"`
+	Key            string    `json:"id"`
+	Lic            string    `json:"license"`
+	ExpDate        time.Time `json:"expDate"`
+	LicName        string    `json:"licenseName"`
+	BusName        string    `json:"businessName"`
+	PremiseAddress string    `json:"premiseAddress"`
+	//PremiseZip     string    `json:"premiseZip"`
+	MailingAddress string `json:"mailingAddress"`
+	Phone          string `json:"phone"`
 }
 
 //FlicRequest FlicRequest
@@ -48,21 +57,34 @@ type FlicRequest struct {
 	Domain      string
 }
 
+//FlicAnalytics FlicAnalytics
+type FlicAnalytics struct {
+	CustomerKey string    `bigquery:"customer_key"`
+	APIKey      string    `bigquery:"api_key"`
+	Domain      string    `bigquery:"domain"`
+	Entered     time.Time `bigquery:"entered"`
+	Success     bool      `bigquery:"success"`
+	SearchType  string    `bigquery:"type_search"`
+}
+
 //Manager Manager
 type Manager interface {
 	FindFlicListByZip(req *FlicRequest) *[]Flic
 	FindFlicByKey(req *FlicRequest) *Flic
+	SetTableName(table string) bool
+	ValidateUser(req *FlicRequest) bool
+	InitialBqTableName() bool
 }
 
 //FlicManager FlicManager
 type FlicManager struct {
-	FlicDB db.FlicDB
-	Log    *lg.Logger
-	//Pusher
-	Puller      pu.Puller
-	GcpProject  string //= "august-gantry-192521"
-	DatasetName string // = "ulboralabs"
-	Table       string
+	FlicDB         db.FlicDB
+	Log            *lg.Logger
+	AnalyticPusher ph.AnalyticPusher
+	Puller         pu.Puller
+	GcpProject     string //= "august-gantry-192521"
+	DatasetName    string // = "ulboralabs"
+	Table          string
 }
 
 //GetNew GetNew
@@ -73,7 +95,7 @@ func (m *FlicManager) GetNew() Manager {
 //FindFlicListByZip FindFlicListByZip
 func (m *FlicManager) FindFlicListByZip(req *FlicRequest) *[]Flic {
 	var rtn []Flic
-	if m.validateUser(req) {
+	if m.ValidateUser(req) {
 		var query = "SELECT key, lic_name, bus_name, premise_address " +
 			" FROM " + m.GcpProject + "." + m.DatasetName + "." + m.Table +
 			" WHERE premise_zip like @zip "
@@ -103,7 +125,7 @@ func (m *FlicManager) FindFlicListByZip(req *FlicRequest) *[]Flic {
 //FindFlicByKey FindFlicByKey
 func (m *FlicManager) FindFlicByKey(req *FlicRequest) *Flic {
 	var rtn Flic
-	if m.validateUser(req) {
+	if m.ValidateUser(req) {
 		var query = "SELECT key, lic, exp_date, lic_name, bus_name, premise_address, mailing_address, phone " +
 			" FROM " + m.GcpProject + "." + m.DatasetName + "." + m.Table +
 			" WHERE key = @key "
@@ -134,11 +156,44 @@ func (m *FlicManager) FindFlicByKey(req *FlicRequest) *Flic {
 	return &rtn
 }
 
-func (m *FlicManager) validateUser(req *FlicRequest) bool {
+//SetTableName SetTableName
+func (m *FlicManager) SetTableName(table string) bool {
 	var rtn bool
+	if table != "" {
+		res := m.FlicDB.GetFlicTable()
+		if res.ID != 0 {
+			res.Name = table
+			suc := m.FlicDB.SetFlicTable(res)
+			if suc {
+				m.Table = table
+				rtn = suc
+			}
+		}
+	}
+	return rtn
+}
+
+//InitialBqTableName InitialBqTableName
+func (m *FlicManager) InitialBqTableName() bool {
+	var rtn bool
+	res := m.FlicDB.GetFlicTable()
+	m.Log.Debug("InitialBqTableName")
+	if res.ID != 0 {
+		m.Table = res.Name
+		rtn = true
+		m.Log.Debug("InitialBqTableName Success: ", rtn)
+	}
+	return rtn
+}
+
+//ValidateUser ValidateUser
+func (m *FlicManager) ValidateUser(req *FlicRequest) bool {
+	var rtn bool
+	m.Log.Debug("api key: ", req.APIKey)
 	if req.APIKey != "" {
 		res := m.FlicDB.GetUser(req.APIKey)
-		if res != nil && res.UserType == "api" {
+		m.Log.Debug("api key from db: ", *res)
+		if res != nil && res.UserType == "api" && res.Enabled {
 			rtn = true
 		}
 	} else if req.CustomerKey != "" {
@@ -147,10 +202,31 @@ func (m *FlicManager) validateUser(req *FlicRequest) bool {
 		m.Log.Debug("user res: ", *res)
 		m.Log.Debug("user res.UserType: ", *&res.UserType)
 		m.Log.Debug("user res.Domain: ", *&res.Domain)
-		if res != nil && res.UserType == "customer" && res.Domain == req.Domain {
+		m.Log.Debug("user enabled: ", *&res.Enabled)
+		if res != nil && res.UserType == "customer" && res.Domain == req.Domain && res.Enabled {
 			rtn = true
 		}
 	}
 	m.Log.Debug("user validated: ", rtn)
+	var fl FlicAnalytics
+	fl.APIKey = req.APIKey
+	fl.CustomerKey = req.CustomerKey
+	fl.Domain = req.Domain
+	if req.ID != "" {
+		fl.SearchType = searchTypeID
+	} else if req.Zip != "" {
+		fl.SearchType = searchTypeZip
+	}
+	fl.Entered = time.Now()
+	fl.Success = rtn
+	// go m.AnalyticPusher.Push(fl, analyticsTable)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(rc interface{}) {
+		defer wg.Done()
+		suc := m.AnalyticPusher.Push(rc, analyticsTable)
+		m.Log.Debug("Analytic Push: ", suc)
+	}(fl)
+	wg.Wait()
 	return rtn
 }
