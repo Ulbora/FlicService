@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"net/http"
 
-	ph "github.com/Ulbora/AnalyticPusher"
+	//ph "github.com/Ulbora/AnalyticPusher"
 	mg "github.com/Ulbora/FlicService/managers"
 	lg "github.com/Ulbora/Level_Logger"
 )
 
 //FlicHandler FlicHandler
 type FlicHandler struct {
-	Manager        mg.Manager
-	Log            *lg.Logger
-	AnalyticPusher ph.AnalyticPusher
+	Manager mg.Manager
+	Log     *lg.Logger
+	//AnalyticPusher ph.AnalyticPusher
 }
 
 //Request Request
@@ -66,10 +66,16 @@ func (h *FlicHandler) FindFlicListByZip(w http.ResponseWriter, r *http.Request) 
 			} else if host != "" {
 				flicReq.Domain = host
 			}
-			flicList := h.Manager.FindFlicListByZip(&flicReq)
-			w.WriteHeader(http.StatusOK)
-			resJSON, _ := json.Marshal(flicList)
-			fmt.Fprint(w, string(resJSON))
+			suc, flicList := h.Manager.FindFlicListByZip(&flicReq)
+			if suc {
+				h.Log.Debug("flicList: ", *flicList)
+				w.WriteHeader(http.StatusOK)
+				resJSON, _ := json.Marshal(flicList)
+				fmt.Fprint(w, string(resJSON))
+			} else {
+				w.WriteHeader(http.StatusUnauthorized)
+			}
+
 		}
 	}
 }
@@ -106,10 +112,15 @@ func (h *FlicHandler) FindFlicByKey(w http.ResponseWriter, r *http.Request) {
 			} else if host != "" {
 				flicReq.Domain = host
 			}
-			flic := h.Manager.FindFlicByKey(&flicReq)
-			w.WriteHeader(http.StatusOK)
-			resJSON, _ := json.Marshal(flic)
-			fmt.Fprint(w, string(resJSON))
+			suc, flic := h.Manager.FindFlicByKey(&flicReq)
+			if suc {
+				w.WriteHeader(http.StatusOK)
+				resJSON, _ := json.Marshal(flic)
+				fmt.Fprint(w, string(resJSON))
+			} else {
+				w.WriteHeader(http.StatusUnauthorized)
+			}
+
 		}
 	}
 }

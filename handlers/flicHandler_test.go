@@ -41,6 +41,103 @@ func TestFlicHandler_FindFlicListByZip(t *testing.T) {
 	mydb.MockTestRow = &mTestRow
 
 	var getRow db.DbRow
+	getRow.Row = []string{"1", "some user", "456211111", "test.com", "customer", "1"}
+	mydb.MockRow1 = &getRow
+
+	dbi = &mydb
+
+	udb.DB = dbi
+	dbi.Connect()
+
+	var l lg.Logger
+	l.LogLevel = lg.AllLevel
+	udb.Log = &l
+
+	fm.FlicDB = &udb
+	fm.Log = &l
+	fh.Manager = &fm
+	fh.Log = &l
+	var bp pu.MockPuller
+	var mres [][]bigquery.Value
+	var mr1 []bigquery.Value
+	var v1 bigquery.Value
+	v1 = "158097011D35255"
+	mr1 = append(mr1, v1)
+	//v1 = "15-80-9701-1D-35255"
+	//mr1 = append(mr1, v1)
+	//v1 = time.Now()
+	//mr1 = append(mr1, v1)
+	v1 = "Bobs OUtdoors"
+	mr1 = append(mr1, v1)
+	v1 = "Bobs OUtdoors"
+	mr1 = append(mr1, v1)
+	v1 = "123 Bobs street, Bobtown PR"
+	mr1 = append(mr1, v1)
+	//v1 = "PO Box 123, Bobtown PR"
+	//mr1 = append(mr1, v1)
+	//v1 = "129-358-1234"
+	//mr1 = append(mr1, v1)
+
+	mres = append(mres, mr1)
+	bp.MockResp = mres
+
+	fm.GcpProject = "august-gantry-192521"
+	fm.DatasetName = "ulboralabs"
+	fm.Table = "flic_May_5_2020_18_28_26"
+	ctx := context.Background()
+	bp.SetContext(ctx)
+	client, err := bigquery.NewClient(ctx, fm.GcpProject, option.WithCredentialsFile("../../gcpCreds.json"))
+	if err != nil {
+		fmt.Println("bq err: ", err)
+	}
+	bp.SetClient(client)
+	fm.Puller = &bp
+
+	var ayn ph.Pusher
+	ayn.GcpProject = "august-gantry-192521"
+	ayn.Client = client
+	ayn.Ctx = ctx
+	ayn.DatasetName = "ulboralabs"
+	fm.AnalyticPusher = &ayn
+
+	h := fh.GetNew()
+	aJSON := ioutil.NopCloser(bytes.NewBufferString(`{"zip":"12345"}`))
+	//aJSON, _ := json.Marshal(robj)
+	//fmt.Println("aJSON: ", aJSON)
+	r, _ := http.NewRequest("POST", "/ffllist", aJSON)
+	//r, _ := http.NewRequest("POST", "/ffllist", nil)
+	r.Host = "test.com"
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Origin", "test.com")
+	r.Header.Set("customer-key", "customer1234")
+	w := httptest.NewRecorder()
+	h.FindFlicListByZip(w, r)
+	hd := w.Header()
+	fmt.Println("w content type", hd.Get("Content-Type"))
+	if w.Code != 200 || w.Header().Get("Content-Type") != "application/json" {
+		t.Fail()
+	}
+}
+
+func TestFlicHandler_FindFlicListByZipAuth(t *testing.T) {
+	var fh FlicHandler
+	var fm mg.FlicManager
+	// var ayn ph.MockPusher
+	//fh.AnalyticPusher = &ayn
+	//ayn.MockPushSuccess = true
+	var dbi db.Database
+	var udb fdb.UserDB
+	var mydb mdb.MyDBMock
+	mydb.Host = "localhost:3306"
+	mydb.User = "admin"
+	mydb.Password = "admin"
+	mydb.Database = "flic_service"
+
+	var mTestRow db.DbRow
+	mTestRow.Row = []string{"1"}
+	mydb.MockTestRow = &mTestRow
+
+	var getRow db.DbRow
 	getRow.Row = []string{"1", "some user", "456211111", "", "api", "1"}
 	mydb.MockRow1 = &getRow
 
@@ -114,7 +211,7 @@ func TestFlicHandler_FindFlicListByZip(t *testing.T) {
 	h.FindFlicListByZip(w, r)
 	hd := w.Header()
 	fmt.Println("w content type", hd.Get("Content-Type"))
-	if w.Code != 200 || w.Header().Get("Content-Type") != "application/json" {
+	if w.Code != 401 || w.Header().Get("Content-Type") != "application/json" {
 		t.Fail()
 	}
 }
@@ -211,7 +308,7 @@ func TestFlicHandler_FindFlicListByZipHost(t *testing.T) {
 	h.FindFlicListByZip(w, r)
 	hd := w.Header()
 	fmt.Println("w content type", hd.Get("Content-Type"))
-	if w.Code != 200 || w.Header().Get("Content-Type") != "application/json" {
+	if w.Code != 401 || w.Header().Get("Content-Type") != "application/json" {
 		t.Fail()
 	}
 }
@@ -220,7 +317,7 @@ func TestFlicHandler_FindFlicListByZipBadBody(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB
@@ -308,7 +405,7 @@ func TestFlicHandler_FindFlicListByZipMedia(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB
@@ -435,7 +532,7 @@ func TestFlicHandler_FindFlicByKey(t *testing.T) {
 	mydb.MockTestRow = &mTestRow
 
 	var getRow db.DbRow
-	getRow.Row = []string{"1", "some user", "456211111", "", "api", "1"}
+	getRow.Row = []string{"1", "some user", "456211111", "test.com", "customer", "1"}
 	mydb.MockRow1 = &getRow
 
 	dbi = &mydb
@@ -509,6 +606,103 @@ func TestFlicHandler_FindFlicByKey(t *testing.T) {
 	hd := w.Header()
 	fmt.Println("w content type", hd.Get("Content-Type"))
 	if w.Code != 200 || w.Header().Get("Content-Type") != "application/json" {
+		t.Fail()
+	}
+}
+
+func TestFlicHandler_FindFlicByKeyAuth(t *testing.T) {
+	var fh FlicHandler
+	var fm mg.FlicManager
+	// var ayn ph.MockPusher
+	// fh.AnalyticPusher = &ayn
+	// ayn.MockPushSuccess = true
+	var dbi db.Database
+	var udb fdb.UserDB
+	var mydb mdb.MyDBMock
+	mydb.Host = "localhost:3306"
+	mydb.User = "admin"
+	mydb.Password = "admin"
+	mydb.Database = "flic_service"
+
+	var mTestRow db.DbRow
+	mTestRow.Row = []string{"1"}
+	mydb.MockTestRow = &mTestRow
+
+	var getRow db.DbRow
+	getRow.Row = []string{"1", "some user", "456211111", "", "api", "1"}
+	mydb.MockRow1 = &getRow
+
+	dbi = &mydb
+
+	udb.DB = dbi
+	dbi.Connect()
+
+	var l lg.Logger
+	l.LogLevel = lg.AllLevel
+	udb.Log = &l
+
+	fm.FlicDB = &udb
+	fm.Log = &l
+	fh.Manager = &fm
+	fh.Log = &l
+	var bp pu.MockPuller
+	var mres [][]bigquery.Value
+	var mr1 []bigquery.Value
+	var v1 bigquery.Value
+	v1 = "158097011D35255"
+	mr1 = append(mr1, v1)
+	v1 = "15-80-9701-1D-35255"
+	mr1 = append(mr1, v1)
+	v1 = time.Now()
+	mr1 = append(mr1, v1)
+	v1 = "Bobs OUtdoors"
+	mr1 = append(mr1, v1)
+	v1 = "Bobs OUtdoors"
+	mr1 = append(mr1, v1)
+	v1 = "123 Bobs street, Bobtown PR"
+	mr1 = append(mr1, v1)
+	v1 = "PO Box 123, Bobtown PR"
+	mr1 = append(mr1, v1)
+	v1 = "129-358-1234"
+	mr1 = append(mr1, v1)
+
+	mres = append(mres, mr1)
+	bp.MockResp = mres
+
+	fm.GcpProject = "august-gantry-192521"
+	fm.DatasetName = "ulboralabs"
+	fm.Table = "flic_May_5_2020_18_28_26"
+	ctx := context.Background()
+	bp.SetContext(ctx)
+	client, err := bigquery.NewClient(ctx, fm.GcpProject, option.WithCredentialsFile("../../gcpCreds.json"))
+	if err != nil {
+		fmt.Println("bq err: ", err)
+	}
+	bp.SetClient(client)
+	fm.Puller = &bp
+
+	var ayn ph.Pusher
+	ayn.GcpProject = "august-gantry-192521"
+	ayn.Client = client
+	ayn.Ctx = ctx
+	ayn.DatasetName = "ulboralabs"
+	fm.AnalyticPusher = &ayn
+
+	h := fh.GetNew()
+	aJSON := ioutil.NopCloser(bytes.NewBufferString(`{"id":"12345"}`))
+	//aJSON, _ := json.Marshal(robj)
+	//fmt.Println("aJSON: ", aJSON)
+	r, _ := http.NewRequest("POST", "/ffllist", aJSON)
+	//r, _ := http.NewRequest("POST", "/ffllist", nil)
+	r.Host = "test.com"
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Origin", "test.com")
+	r.Header.Set("customer-key", "customer1234")
+	w := httptest.NewRecorder()
+	h.FindFlicByKey(w, r)
+	hd := w.Header()
+	fmt.Println("w content type", hd.Get("Content-Type"))
+	if w.Code != 401 || w.Header().Get("Content-Type") != "application/json" {
 		t.Fail()
 	}
 }
@@ -605,7 +799,7 @@ func TestFlicHandler_FindFlicByKeyHost(t *testing.T) {
 	h.FindFlicByKey(w, r)
 	hd := w.Header()
 	fmt.Println("w content type", hd.Get("Content-Type"))
-	if w.Code != 200 || w.Header().Get("Content-Type") != "application/json" {
+	if w.Code != 401 || w.Header().Get("Content-Type") != "application/json" {
 		t.Fail()
 	}
 }
@@ -614,7 +808,7 @@ func TestFlicHandler_FindFlicByKeyBody(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB
@@ -703,7 +897,7 @@ func TestFlicHandler_FindFlicByKeyMedia(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB
@@ -792,7 +986,7 @@ func TestFlicHandler_SetFlicTable(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB
@@ -856,7 +1050,7 @@ func TestFlicHandler_SetFlicTableApiKey(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB
@@ -920,7 +1114,7 @@ func TestFlicHandler_SetFlicTableBody(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB
@@ -984,7 +1178,7 @@ func TestFlicHandler_SetFlicTableMedia(t *testing.T) {
 	var fh FlicHandler
 	var fm mg.FlicManager
 	var ayn ph.MockPusher
-	fh.AnalyticPusher = &ayn
+	//fh.AnalyticPusher = &ayn
 	ayn.MockPushSuccess = true
 	var dbi db.Database
 	var udb fdb.UserDB

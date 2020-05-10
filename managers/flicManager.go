@@ -48,6 +48,14 @@ type Flic struct {
 	Phone          string `json:"phone"`
 }
 
+//FlicList FlicList
+type FlicList struct {
+	Key            string `json:"id"`
+	LicName        string `json:"licenseName"`
+	BusName        string `json:"businessName"`
+	PremiseAddress string `json:"premiseAddress"`
+}
+
 //FlicRequest FlicRequest
 type FlicRequest struct {
 	ID          string
@@ -69,8 +77,8 @@ type FlicAnalytics struct {
 
 //Manager Manager
 type Manager interface {
-	FindFlicListByZip(req *FlicRequest) *[]Flic
-	FindFlicByKey(req *FlicRequest) *Flic
+	FindFlicListByZip(req *FlicRequest) (bool, *[]FlicList)
+	FindFlicByKey(req *FlicRequest) (bool, *Flic)
 	SetTableName(table string) bool
 	ValidateUser(req *FlicRequest) bool
 	InitialBqTableName() bool
@@ -93,9 +101,11 @@ func (m *FlicManager) GetNew() Manager {
 }
 
 //FindFlicListByZip FindFlicListByZip
-func (m *FlicManager) FindFlicListByZip(req *FlicRequest) *[]Flic {
-	var rtn []Flic
+func (m *FlicManager) FindFlicListByZip(req *FlicRequest) (bool, *[]FlicList) {
+	var rtn = []FlicList{}
+	var suc bool
 	if m.ValidateUser(req) {
+		suc = true
 		var query = "SELECT key, lic_name, bus_name, premise_address " +
 			" FROM " + m.GcpProject + "." + m.DatasetName + "." + m.Table +
 			" WHERE premise_zip like @zip "
@@ -111,7 +121,7 @@ func (m *FlicManager) FindFlicListByZip(req *FlicRequest) *[]Flic {
 		m.Log.Debug("res: ", *recs)
 
 		for _, f := range *recs {
-			var flic Flic
+			var flic FlicList
 			flic.Key = f[0].(string)
 			flic.LicName = f[1].(string)
 			flic.BusName = f[2].(string)
@@ -119,13 +129,15 @@ func (m *FlicManager) FindFlicListByZip(req *FlicRequest) *[]Flic {
 			rtn = append(rtn, flic)
 		}
 	}
-	return &rtn
+	return suc, &rtn
 }
 
 //FindFlicByKey FindFlicByKey
-func (m *FlicManager) FindFlicByKey(req *FlicRequest) *Flic {
+func (m *FlicManager) FindFlicByKey(req *FlicRequest) (bool, *Flic) {
 	var rtn Flic
+	var suc bool
 	if m.ValidateUser(req) {
+		suc = true
 		var query = "SELECT key, lic, exp_date, lic_name, bus_name, premise_address, mailing_address, phone " +
 			" FROM " + m.GcpProject + "." + m.DatasetName + "." + m.Table +
 			" WHERE key = @key "
@@ -153,7 +165,7 @@ func (m *FlicManager) FindFlicByKey(req *FlicRequest) *Flic {
 			rtn = flic
 		}
 	}
-	return &rtn
+	return suc, &rtn
 }
 
 //SetTableName SetTableName
@@ -177,7 +189,7 @@ func (m *FlicManager) SetTableName(table string) bool {
 func (m *FlicManager) InitialBqTableName() bool {
 	var rtn bool
 	res := m.FlicDB.GetFlicTable()
-	m.Log.Debug("InitialBqTableName")
+	m.Log.Debug("InitialBqTableName: ", res.Name)
 	if res.ID != 0 {
 		m.Table = res.Name
 		rtn = true

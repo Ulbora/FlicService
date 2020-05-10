@@ -96,7 +96,7 @@ func TestFlicManager_FindFlicListByZip(t *testing.T) {
 
 	f := fm.GetNew()
 	f.SetTableName("flic_May_5_2020_18_28_26")
-	res := f.FindFlicListByZip(&req)
+	_, res := f.FindFlicListByZip(&req)
 	if len(*res) == 0 {
 		t.Fail()
 	} else {
@@ -183,7 +183,7 @@ func TestFlicManager_FindFlicByKey(t *testing.T) {
 	req.ID = "158097011D35284"
 
 	f := fm.GetNew()
-	res := f.FindFlicByKey(&req)
+	_, res := f.FindFlicByKey(&req)
 	if (*res).Key == "" {
 		t.Fail()
 	} else {
