@@ -35,6 +35,7 @@ import (
 	fdb "github.com/Ulbora/FlicService/mysqldb"
 	lg "github.com/Ulbora/Level_Logger"
 	mdb "github.com/Ulbora/dbinterface_mysql"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"google.golang.org/api/option"
 )
@@ -138,7 +139,10 @@ func main() {
 	router.HandleFunc("/rs/loglevel", h.SetLogLevel).Methods("POST")
 
 	fmt.Println("Starting Server on " + port)
-	http.ListenAndServe(":"+port, router)
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "secureurl", "Content-Type", "api-key", "customer-key", "Origin"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	http.ListenAndServe(":"+port, handlers.CORS(headersOk, originsOk, methodsOk)(router))
 
 }
 
