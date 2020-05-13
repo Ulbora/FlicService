@@ -106,9 +106,9 @@ func TestFlicHandler_FindFlicListByZip(t *testing.T) {
 	//fmt.Println("aJSON: ", aJSON)
 	r, _ := http.NewRequest("POST", "/ffllist", aJSON)
 	//r, _ := http.NewRequest("POST", "/ffllist", nil)
-	r.Host = "test.com"
+	r.Host = "test.com:8080"
 	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Origin", "test.com")
+	r.Header.Set("Origin", "http://test.com:8080")
 	r.Header.Set("customer-key", "customer1234")
 	w := httptest.NewRecorder()
 	h.FindFlicListByZip(w, r)
@@ -597,9 +597,9 @@ func TestFlicHandler_FindFlicByKey(t *testing.T) {
 	//fmt.Println("aJSON: ", aJSON)
 	r, _ := http.NewRequest("POST", "/ffllist", aJSON)
 	//r, _ := http.NewRequest("POST", "/ffllist", nil)
-	r.Host = "test.com"
+	r.Host = "test.com:8080"
 	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Origin", "test.com")
+	r.Header.Set("Origin", "http://test.com:8089")
 	r.Header.Set("customer-key", "customer1234")
 	w := httptest.NewRecorder()
 	h.FindFlicByKey(w, r)

@@ -151,7 +151,6 @@ func (m *FlicManager) FindFlicByKey(req *FlicRequest) (bool, *Flic) {
 
 		recs := m.Puller.Pull(query, &qp)
 		m.Log.Debug("res: ", *recs)
-
 		for _, f := range *recs {
 			var flic Flic
 			flic.Key = f[0].(string)

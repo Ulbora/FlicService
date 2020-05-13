@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	//ph "github.com/Ulbora/AnalyticPusher"
 	mg "github.com/Ulbora/FlicService/managers"
@@ -46,6 +47,18 @@ type TableRequest struct {
 	Name string `json:"name"`
 }
 
+//Flic Flic
+type Flic struct {
+	Key            string `json:"id"`
+	Lic            string `json:"license"`
+	ExpDate        string `json:"expDate"`
+	LicName        string `json:"licenseName"`
+	BusName        string `json:"businessName"`
+	PremiseAddress string `json:"premiseAddress"`
+	MailingAddress string `json:"mailingAddress"`
+	Phone          string `json:"phone"`
+}
+
 //GetNew GetNew
 func (h *FlicHandler) GetNew() Handlers {
 	return h
@@ -53,6 +66,13 @@ func (h *FlicHandler) GetNew() Handlers {
 
 //FindFlicListByZip FindFlicListByZip
 func (h *FlicHandler) FindFlicListByZip(w http.ResponseWriter, r *http.Request) {
+	//SetupResponse(&w, r)
+	// if (r).Method == "OPTIONS" {
+	// 	//w.WriteHeader(http.StatusOK)
+	// 	//h.Log.Debug("In preflight: ", w.WriteHeader)
+
+	// } else {
+
 	h.setContentType(w)
 	h.Log.Debug("Host: ", r.Host)
 	h.Log.Debug("URL: ", r.URL)
@@ -72,6 +92,22 @@ func (h *FlicHandler) FindFlicListByZip(w http.ResponseWriter, r *http.Request) 
 		} else {
 			origin := r.Header.Get("Origin")
 			host := r.Host
+			colonInd := strings.Index(host, ":")
+			if colonInd > 0 {
+				h.Log.Debug("stripped host: ", host[0:colonInd])
+				host = host[0:colonInd]
+			}
+
+			colonInd = strings.LastIndex(origin, ":")
+			//h.Log.Debug("stripped origin port: ", origin[colonInd:])
+			if colonInd > 0 && len(origin[colonInd:]) == 5 {
+				h.Log.Debug("stripped origin 1: ", origin[0:colonInd])
+				origin = origin[0:colonInd]
+			}
+			slashInd := strings.LastIndex(origin, "/")
+			origin = origin[slashInd+1:]
+			h.Log.Debug("stripped origin 2: ", origin)
+
 			apiKey := r.Header.Get("api-key")
 			customerKey := r.Header.Get("customer-key")
 			var flicReq mg.FlicRequest
@@ -95,6 +131,8 @@ func (h *FlicHandler) FindFlicListByZip(w http.ResponseWriter, r *http.Request) 
 
 		}
 	}
+	//	}
+
 }
 
 //FindFlicByKey FindFlicByKey
@@ -118,6 +156,22 @@ func (h *FlicHandler) FindFlicByKey(w http.ResponseWriter, r *http.Request) {
 		} else {
 			origin := r.Header.Get("Origin")
 			host := r.Host
+			colonInd := strings.Index(host, ":")
+			if colonInd > 0 {
+				h.Log.Debug("stripped host: ", host[0:colonInd])
+				host = host[0:colonInd]
+			}
+
+			colonInd = strings.LastIndex(origin, ":")
+			//h.Log.Debug("stripped origin port: ", origin[colonInd:])
+			if colonInd > 0 && len(origin[colonInd:]) == 5 {
+				h.Log.Debug("stripped origin 1: ", origin[0:colonInd])
+				origin = origin[0:colonInd]
+			}
+			slashInd := strings.LastIndex(origin, "/")
+			origin = origin[slashInd+1:]
+			h.Log.Debug("stripped origin 2: ", origin)
+
 			apiKey := r.Header.Get("api-key")
 			customerKey := r.Header.Get("customer-key")
 			var flicReq mg.FlicRequest
@@ -131,8 +185,22 @@ func (h *FlicHandler) FindFlicByKey(w http.ResponseWriter, r *http.Request) {
 			}
 			suc, flic := h.Manager.FindFlicByKey(&flicReq)
 			if suc {
+				layoutUS := "January 2, 2006"
+
+				var flc Flic
+				flc.Key = flic.Key
+				flc.Lic = flic.Lic
+				flc.BusName = flic.BusName
+				flc.LicName = flic.LicName
+				flc.PremiseAddress = flic.PremiseAddress
+				flc.MailingAddress = flic.MailingAddress
+				flc.Phone = flic.Phone
+				flc.ExpDate = flic.ExpDate.Format(layoutUS)
+				dstr := flic.ExpDate.Format(layoutUS)
+				h.Log.Debug("date : ", flic.ExpDate)
+				h.Log.Debug("date str: ", dstr)
 				w.WriteHeader(http.StatusOK)
-				resJSON, _ := json.Marshal(flic)
+				resJSON, _ := json.Marshal(flc)
 				fmt.Fprint(w, string(resJSON))
 			} else {
 				w.WriteHeader(http.StatusUnauthorized)
