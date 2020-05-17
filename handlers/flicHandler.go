@@ -55,6 +55,10 @@ type Flic struct {
 	LicName        string `json:"licenseName"`
 	BusName        string `json:"businessName"`
 	PremiseAddress string `json:"premiseAddress"`
+	Address        string `json:"address"`
+	City           string `json:"city"`
+	State          string `json:"state"`
+	PremiseZip     string `json:"premiseZip"`
 	MailingAddress string `json:"mailingAddress"`
 	Phone          string `json:"phone"`
 }
@@ -193,6 +197,10 @@ func (h *FlicHandler) FindFlicByKey(w http.ResponseWriter, r *http.Request) {
 				flc.BusName = flic.BusName
 				flc.LicName = flic.LicName
 				flc.PremiseAddress = flic.PremiseAddress
+				flc.Address = flic.Address
+				flc.City = flic.City
+				flc.State = flic.State
+				flc.PremiseZip = flic.PremiseZip
 				flc.MailingAddress = flic.MailingAddress
 				flc.Phone = flic.Phone
 				flc.ExpDate = flic.ExpDate.Format(layoutUS)

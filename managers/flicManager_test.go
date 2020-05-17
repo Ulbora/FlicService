@@ -151,6 +151,14 @@ func TestFlicManager_FindFlicByKey(t *testing.T) {
 	mr1 = append(mr1, v1)
 	v1 = "123 Bobs street, Bobtown PR"
 	mr1 = append(mr1, v1)
+	v1 = "123 Bobs street"
+	mr1 = append(mr1, v1)
+	v1 = "Bobtown"
+	mr1 = append(mr1, v1)
+	v1 = "PR"
+	mr1 = append(mr1, v1)
+	v1 = "12345"
+	mr1 = append(mr1, v1)
 	v1 = "PO Box 123, Bobtown PR"
 	mr1 = append(mr1, v1)
 	v1 = "129-358-1234"

@@ -43,9 +43,12 @@ type Flic struct {
 	LicName        string    `json:"licenseName"`
 	BusName        string    `json:"businessName"`
 	PremiseAddress string    `json:"premiseAddress"`
-	//PremiseZip     string    `json:"premiseZip"`
-	MailingAddress string `json:"mailingAddress"`
-	Phone          string `json:"phone"`
+	Address        string    `json:"address"`
+	City           string    `json:"city"`
+	State          string    `json:"state"`
+	PremiseZip     string    `json:"premiseZip"`
+	MailingAddress string    `json:"mailingAddress"`
+	Phone          string    `json:"phone"`
 }
 
 //FlicList FlicList
@@ -138,7 +141,8 @@ func (m *FlicManager) FindFlicByKey(req *FlicRequest) (bool, *Flic) {
 	var suc bool
 	if m.ValidateUser(req) {
 		suc = true
-		var query = "SELECT key, lic, exp_date, lic_name, bus_name, premise_address, mailing_address, phone " +
+		var query = "SELECT key, lic, exp_date, lic_name, bus_name, premise_address, address, " +
+			"city, state, premise_zip, mailing_address, phone " +
 			" FROM " + m.GcpProject + "." + m.DatasetName + "." + m.Table +
 			" WHERE key = @key "
 		var qp []bigquery.QueryParameter
@@ -159,8 +163,12 @@ func (m *FlicManager) FindFlicByKey(req *FlicRequest) (bool, *Flic) {
 			flic.LicName = f[3].(string)
 			flic.BusName = f[4].(string)
 			flic.PremiseAddress = f[5].(string)
-			flic.MailingAddress = f[6].(string)
-			flic.Phone = f[7].(string)
+			flic.Address = f[6].(string)
+			flic.City = f[7].(string)
+			flic.State = f[8].(string)
+			flic.PremiseZip = f[9].(string)
+			flic.MailingAddress = f[10].(string)
+			flic.Phone = f[11].(string)
 			rtn = flic
 		}
 	}
