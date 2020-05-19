@@ -4,6 +4,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -69,6 +70,8 @@ func (h *FlicHandler) SetLogLevel(w http.ResponseWriter, r *http.Request) {
 			loggingKey = defaultLoggingKey
 		}
 		loggingKeyHdr := r.Header.Get("Logging_KEY")
+		log.Println("loggingKey: ", loggingKey)
+		log.Println("loggingKeyHdr: ", loggingKeyHdr)
 		if loggingKey == loggingKeyHdr {
 			var lv LogLevel
 			lgsuc, lgerr := h.processBody(r, &lv)
