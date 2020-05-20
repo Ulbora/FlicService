@@ -182,6 +182,12 @@ func (h *FlicHandler) FindFlicByKey(w http.ResponseWriter, r *http.Request) {
 			origin = origin[slashInd+1:]
 			h.Log.Debug("stripped origin 2: ", origin)
 
+			wwwInd := strings.Index(origin, "www.")
+			if wwwInd > -1 {
+				origin = origin[wwwInd+4:]
+				h.Log.Debug("stripped origin 3: ", origin)
+			}
+
 			apiKey := r.Header.Get("api-key")
 			customerKey := r.Header.Get("customer-key")
 			var flicReq mg.FlicRequest
